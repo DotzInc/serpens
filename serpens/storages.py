@@ -20,6 +20,7 @@ class StorageClient:
         logger.debug(f"Provider: {self._provider.value}")
         module = importlib.import_module(f"serpens.{self._provider.value}")
         self._get_object = module.get_object
+        self._upload_object = module.upload_object
 
     def get(
         self,
@@ -29,6 +30,17 @@ class StorageClient:
         object = self._get_object(bucket, key)
 
         return object
+
+    def upload(
+        self,
+        data: str,
+        bucket: str,
+        key: str,
+        content_type: str,
+    ) -> Dict[str, Any]:
+        response = self._upload_object(data, bucket, key, content_type, acl="private")
+
+        return response
 
     @classmethod
     def instance(cls):

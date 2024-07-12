@@ -11,14 +11,25 @@ class TestStorages(unittest.TestCase):
         self.mock_boto3 = self.patch_boto3.start()
         self.s3_client = self.mock_boto3.client.return_value
 
+        self.patch_gcs = patch("serpens.cloud_storage.storage")
+        self.mock_gcs = self.patch_gcs.start()
+        self.gcs_client = self.mock_gcs.client.return_value
+
         self.bucket = ""
         self.key = ""
 
     def tearDown(self):
         self.patch_boto3.stop()
+        self.patch_gcs.stop()
 
     @patch.dict(os.environ, {"STORAGE_PROVIDER": "s3"})
     def test_get_object_s3(self):
         StorageClient.instance().get(self.bucket, self.key)
 
         self.s3_client.get_object.assert_called_once_with(Bucket=self.bucket, Key=self.key)
+
+    @patch.dict(os.environ, {"STORAGE_PROVIDER": "cloud_storage"})
+    def test_upload_object_gcs(self):
+        StorageClient.instance().upload("foo", self.bucket, self.key, "image/jpeg")
+
+        self.gcs_client.upload_object.assert_called_once_with("foo", "image/jpeg")
